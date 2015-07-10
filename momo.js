@@ -38,7 +38,23 @@ mongo_hacker_config = {
 }
 
 load('hacks.js')
-
+DB.prototype.selectCollections = function(re){
+  var cns = this.getCollectionNames();
+  if (!re) return cns;
+  if (_.isString(re)) re = new RegExp(re);
+  var cols = [];
+  cns.forEach(function(n){
+    if (re.test(n)) cols.push(n)
+  })
+  return cols;
+}
+DB.prototype.dropCollections = function(re){
+  var cols = _.isArray(re) ? re : this.selectCollections(re);
+  cols.forEach(function(c){
+    print(colorize('Dropping ' + c, {color: 'red'}))
+    db[c].drop();
+  })
+}
 DBQuery.prototype.reduce = function(callback, initialValue) {
   var result = initialValue;
   this.forEach(function(obj){
