@@ -143,7 +143,7 @@ function showCounts(){
 		counts.push({collection : col, count : count});
 		total+=count 
 	});
-	showAsTable(counts);
+	showTable(counts);
 	print('Total : ' + total) 
 }
 
