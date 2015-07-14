@@ -153,7 +153,7 @@ function getTable(results, fields, strLimit) {
   	fields = _.keys(results[0])
   }
   var headers = fields;
-  if (strLimit === undefined) strLimit = 20;
+  if (strLimit === undefined) strLimit = 80;
   var rows = results.map(function(row) {
     return fields.map(function(f){return row[f]});
   });
