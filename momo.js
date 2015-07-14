@@ -10,9 +10,6 @@ mongo_hacker_config = {
   indent:         2,                // number of spaces for indent
   sort_keys:      false,            // sort the keys in documents when displayed
   uuid_type:      'default',        // 'java', 'c#', 'python' or 'default'
-  banner_message: 'Mongo-Hacker ',  // banner message
-  version:        '0.0.8',          // current mongo-hacker version
-  show_banner:     true,            // show mongo-hacker version banner on startup
   windows_warning: true,            // show warning banner for windows
   force_color:     false,           // force color highlighting for Windows users
   column_separator:  '→',           // separator used when printing padded/aligned columns
@@ -38,6 +35,42 @@ mongo_hacker_config = {
 }
 
 load('hacks.js')
+
+DB.prototype.showCounts = function (){ 
+  var self = this;
+  var colls = self.getCollectionNames();
+  var total=0; 
+  var counts=[];
+  colls.forEach(function(col){
+    var count=self[col].count(); 
+    counts.push({collection : col, count : count});
+    total+=count 
+  });
+  showTable(counts);
+  print('Total : ' + total) 
+}
+
+DB.prototype.getSlowOps = function(ms){
+  if (ms === undefined) ms = 600;
+  var ops = this.currentOp().inprog;
+  var opids = [];
+  ops.forEach(function(op){ 
+    if (op.secs_running > ms  && op.ns.length > 0) { 
+      opids.push({id : op.opid, ns : op.ns}) 
+    }
+  })
+  return opids;
+}
+
+DB.prototype.killSlowOps = function(ms){
+  var opids = getSlowOps(ms);
+  var self = this;
+  opids.forEach(function(op){ 
+    print('KILLING ' + op.id)
+    self.killOp(op.id) 
+  })
+}
+
 DB.prototype.selectCollections = function(re){
   var cns = this.getCollectionNames();
   if (!re) return cns;
@@ -127,26 +160,6 @@ function use(dbname){
 	db = db.getSiblingDB(dbname);
 }
 
-function showDbs(){
-	var dbs = getDbs()["databases"];
-	dbs.forEach(function(db){
-		print(db.name + "\t : " + db.sizeOnDisk);
-	});
-}
-
-function showCounts(){ 
-	var colls = db.getCollectionNames();
-	var total=0; 
-	var counts=[];
-	colls.forEach(function(col){
-		var count=db[col].count(); 
-		counts.push({collection : col, count : count});
-		total+=count 
-	});
-	showTable(counts);
-	print('Total : ' + total) 
-}
-
 function getTable(results, fields, strLimit) {
 
   if (fields === undefined) {
@@ -183,26 +196,6 @@ function showSchema(items, maxDepth){
     '' : item.percentContaining + "%"
   }})
   showTable(results)
-}
-
-function getSlowOps(ms){
-  if (ms === undefined) ms = 600;
-  var ops = db.currentOp().inprog;
-  var opids = [];
-  ops.forEach(function(op){ 
-  	if (op.secs_running > ms  && op.ns.length > 0) { 
-  		opids.push({id : op.opid, ns : op.ns}) 
-  	}
-  })
-  return opids;
-}
-
-function killSlowOps(ms){
-  var opids = getSlowOps(ms);
-  opids.forEach(function(op){ 
-    print('KILLING ' + op.id)
-    db.killOp(op.id) 
-  })
 }
 
 function getIsoWeek(dt) {
