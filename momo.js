@@ -168,7 +168,14 @@ function getTable(results, fields, strLimit) {
   var headers = fields;
   if (strLimit === undefined) strLimit = 80;
   var rows = results.map(function(row) {
-    return fields.map(function(f){return row[f]});
+    return fields.map(function(f){
+      var parts = f.split('.')
+      var v = row;
+      for(var i = 0; i < parts.length; i++){
+        if (v) v = v[parts[i]];
+      }
+      return v
+    });
   });
   var table = [headers, headers.map(function(){return '';})].concat(rows);
   var limitString = function(str) { return _.isString(str) ? (str.length > strLimit ? str.substring(0, strLimit) + '...' : str) : str + "" }
